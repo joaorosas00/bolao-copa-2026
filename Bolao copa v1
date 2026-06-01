@@ -1,1 +1,527 @@
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyw5ZJqtJ_4FzhBqYrzapU79oCPuSCBP9wyTIlRIypB2TZm5Q7ZkECXHMBMJ4xUnh235A/exec";
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bolão Copa do Mundo 2026</title>
+<style>
+  :root {
+    --verde: #0a7c3e;
+    --verde-claro: #1db954;
+    --amarelo: #f5c518;
+    --azul: #003580;
+    --cinza: #f0f2f5;
+    --branco: #ffffff;
+    --texto: #1a1a2e;
+    --borda: #dde1e7;
+    --sombra: 0 2px 12px rgba(0,0,0,0.10);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: linear-gradient(135deg, #0a7c3e 0%, #003580 100%);
+    min-height: 100vh; padding: 20px; color: var(--texto);
+  }
+  .container { max-width: 900px; margin: 0 auto; }
+  .header {
+    text-align: center; padding: 32px 24px 24px;
+    background: rgba(255,255,255,0.97);
+    border-radius: 20px 20px 0 0;
+    border-bottom: 4px solid var(--amarelo);
+  }
+  .header .trophy { font-size: 52px; margin-bottom: 8px; }
+  .header h1 { font-size: 1.9rem; color: var(--verde); font-weight: 800; letter-spacing: 1px; }
+  .header p { color: #555; font-size: 0.95rem; margin-top: 6px; }
+  .participante-box { background: var(--branco); padding: 20px 28px; border-bottom: 1px solid var(--borda); }
+  .participante-box h3 { font-size: 1rem; color: var(--verde); margin-bottom: 10px; font-weight: 700; }
+  .input-row { display: flex; gap: 14px; flex-wrap: wrap; }
+  .input-row input {
+    flex: 1; min-width: 180px; padding: 10px 14px;
+    border: 2px solid var(--borda); border-radius: 8px;
+    font-size: 0.95rem; transition: border 0.2s; outline: none;
+  }
+  .input-row input:focus { border-color: var(--verde-claro); }
+  .especial-box {
+    background: linear-gradient(90deg, #fff8e1, #fffde7);
+    border: 2px solid var(--amarelo); border-radius: 12px;
+    margin: 18px 28px; padding: 18px 22px;
+  }
+  .especial-box h3 { font-size: 1rem; color: #7a5c00; margin-bottom: 14px; font-weight: 700; }
+  .especial-row { display: flex; gap: 16px; flex-wrap: wrap; }
+  .especial-item {
+    flex: 1; min-width: 200px; background: var(--branco);
+    border-radius: 10px; padding: 12px 16px; border: 1.5px solid var(--amarelo);
+  }
+  .especial-item label { font-size: 0.85rem; font-weight: 700; color: #7a5c00; display: block; margin-bottom: 6px; }
+  .pts-badge { background: var(--amarelo); color: #7a5c00; border-radius: 20px; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; margin-left: 6px; }
+  .pts-badge-red { background: #e74c3c; color: #fff; border-radius: 20px; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; margin-left: 6px; }
+  .especial-item input { width: 100%; padding: 8px 12px; border: 1.5px solid var(--borda); border-radius: 7px; font-size: 0.9rem; outline: none; transition: border 0.2s; }
+  .especial-item input:focus { border-color: var(--amarelo); }
+  .pontuacao-box { margin: 0 28px 18px; background: #f8faff; border: 1.5px solid #c8d6f0; border-radius: 12px; padding: 14px 20px; cursor: pointer; }
+  .pontuacao-toggle { display: flex; align-items: center; justify-content: space-between; font-weight: 700; color: var(--azul); font-size: 0.95rem; user-select: none; }
+  .pontuacao-content { display: none; margin-top: 12px; }
+  .pontuacao-content.open { display: block; }
+  .pts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; margin-top: 8px; }
+  .pts-item { background: var(--branco); border-radius: 8px; padding: 8px 12px; font-size: 0.82rem; border-left: 3px solid var(--verde-claro); color: var(--texto); }
+  .pts-item strong { color: var(--verde); font-size: 1rem; }
+  .fase-section { background: var(--branco); padding: 0 0 10px; }
+  .fase-header { background: var(--verde); color: var(--branco); padding: 12px 28px; font-size: 1rem; font-weight: 800; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+  .grupo-section { padding: 8px 28px 4px; }
+  .grupo-title { font-size: 0.85rem; font-weight: 800; color: var(--azul); text-transform: uppercase; letter-spacing: 1px; padding: 8px 0 6px; border-bottom: 2px solid var(--cinza); margin-bottom: 8px; }
+  .jogo-card { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 10px; margin-bottom: 7px; background: var(--cinza); flex-wrap: wrap; transition: background 0.2s; }
+  .jogo-card:hover { background: #e4edf5; }
+  .jogo-info { flex: 1; min-width: 200px; }
+  .jogo-data { font-size: 0.72rem; color: #888; margin-bottom: 2px; }
+  .jogo-times { font-size: 0.92rem; font-weight: 700; color: var(--texto); }
+  .jogo-local { font-size: 0.72rem; color: #999; margin-top: 1px; }
+  .placar-input { display: flex; align-items: center; gap: 6px; }
+  .placar-input input[type="number"] { width: 46px; height: 38px; text-align: center; font-size: 1.1rem; font-weight: 700; border: 2px solid var(--borda); border-radius: 8px; outline: none; background: var(--branco); transition: border 0.2s; -moz-appearance: textfield; }
+  .placar-input input[type="number"]::-webkit-outer-spin-button,
+  .placar-input input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .placar-input input[type="number"]:focus { border-color: var(--verde-claro); }
+  .placar-sep { font-size: 1.3rem; font-weight: 900; color: #aaa; }
+  .pen-toggle { display: flex; align-items: center; gap: 5px; font-size: 0.78rem; color: #666; white-space: nowrap; }
+  .pen-toggle input[type="checkbox"] { cursor: pointer; width: 14px; height: 14px; }
+  .pen-select { display: none; margin-top: 4px; width: 100%; }
+  .pen-select select { width: 100%; padding: 6px 8px; border: 1.5px solid var(--amarelo); border-radius: 7px; font-size: 0.82rem; outline: none; background: #fffde7; color: var(--texto); }
+  .pen-select.show { display: block; }
+  .fase-header.mata { background: var(--azul); }
+  .fase-header.semi { background: #6a0dad; }
+  .fase-header.final { background: #b8860b; }
+  .btn-submit { display: block; width: calc(100% - 56px); margin: 18px 28px 28px; padding: 16px; background: linear-gradient(90deg, var(--verde), var(--verde-claro)); color: var(--branco); font-size: 1.1rem; font-weight: 800; border: none; border-radius: 12px; cursor: pointer; letter-spacing: 1px; box-shadow: var(--sombra); transition: transform 0.15s, box-shadow 0.15s; }
+  .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.18); }
+  .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  .modal-overlay { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.6); z-index: 9999; align-items: center; justify-content: center; }
+  .modal-overlay.show { display: flex; }
+  .modal-box { background: var(--branco); border-radius: 18px; padding: 32px 28px; max-width: 460px; width: 92%; text-align: center; box-shadow: 0 8px 40px rgba(0,0,0,0.25); position: relative; }
+  .modal-box h2 { color: var(--verde); font-size: 1.5rem; margin-bottom: 8px; }
+  .modal-box p { color: #555; font-size: 0.95rem; margin-bottom: 16px; }
+  .modal-close { position: absolute; top:12px; right:16px; font-size:1.4rem; cursor:pointer; color:#aaa; }
+  .modal-close:hover { color: #333; }
+  .modal-btn { background: var(--verde); color: var(--branco); border: none; border-radius: 8px; padding: 10px 28px; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 4px; }
+  .modal-btn:hover { background: var(--verde-claro); }
+  .summary-list { text-align: left; max-height: 280px; overflow-y: auto; margin: 10px 0 16px; font-size: 0.82rem; border: 1px solid var(--borda); border-radius: 8px; padding: 10px; }
+  .summary-list .s-item { padding: 4px 0; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; }
+  .summary-list .s-item:last-child { border-bottom: none; }
+  .spinner { display: inline-block; width: 18px; height: 18px; border: 3px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 8px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #222; color: #fff; padding: 12px 24px; border-radius: 30px; font-size: 0.9rem; z-index: 99999; opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; }
+  .toast.show { opacity: 1; }
+  .toast.success { background: var(--verde); }
+  .toast.error { background: #c0392b; }
+  .tag-fase { font-size: 0.68rem; background: rgba(255,255,255,0.25); border-radius: 6px; padding: 2px 8px; font-weight: 600; }
+  .counter-bar { background: rgba(255,255,255,0.97); padding: 8px 28px; font-size: 0.82rem; color: #555; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--borda); }
+  .counter-bar span strong { color: var(--verde); }
+  @media (max-width: 600px) {
+    .header h1 { font-size: 1.3rem; }
+    .grupo-section { padding: 8px 12px 4px; }
+    .btn-submit { width: calc(100% - 24px); margin: 18px 12px 28px; }
+    .fase-header { padding: 12px 14px; }
+    .jogo-card { padding: 8px 10px; }
+    .especial-box, .pontuacao-box { margin: 14px 12px; }
+    .participante-box { padding: 16px 12px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="trophy">🏆</div>
+    <h1>BOLÃO COPA DO MUNDO 2026</h1>
+    <p>EUA · México · Canadá &nbsp;|&nbsp; 11 de junho – 19 de julho de 2026 &nbsp;|&nbsp; 104 jogos</p>
+  </div>
+
+  <div class="participante-box">
+    <h3>👤 Dados do Participante</h3>
+    <div class="input-row">
+      <input type="text" id="nome" placeholder="Seu nome completo" required>
+      <input type="text" id="apelido" placeholder="Apelido (opcional)">
+    </div>
+  </div>
+
+  <div class="especial-box">
+    <h3>🌟 Aposta Especial Pré-Copa</h3>
+    <div class="especial-row">
+      <div class="especial-item">
+        <label>🏆 Campeão <span class="pts-badge">+15 pts</span></label>
+        <input type="text" id="campeao" placeholder="Ex: Brasil">
+      </div>
+      <div class="especial-item">
+        <label>🥈 Vice-Campeão <span class="pts-badge">+5 pts</span></label>
+        <input type="text" id="vice" placeholder="Ex: Argentina">
+      </div>
+      <div class="especial-item">
+        <label>⚽ Artilheiro <span class="pts-badge-red">+7 pts</span></label>
+        <input type="text" id="artilheiro" placeholder="Ex: Vinicius Jr.">
+      </div>
+    </div>
+  </div>
+
+  <div class="pontuacao-box" onclick="togglePontuacao()">
+    <div class="pontuacao-toggle">
+      <span>⚽ Ver Regras de Pontuação</span>
+      <span id="arrow">▼</span>
+    </div>
+    <div class="pontuacao-content" id="pontuacaoContent">
+      <div class="pts-grid">
+        <div class="pts-item"><strong>6 pts</strong> — Placar exato</div>
+        <div class="pts-item"><strong>4 pts</strong> — Vencedor + gols de 1 time</div>
+        <div class="pts-item"><strong>3 pts</strong> — Apenas o vencedor ou empate sem exato</div>
+        <div class="pts-item"><strong>1 pt</strong> — Gols de 1 time sem acertar vencedor</div>
+        <div class="pts-item"><strong>9 pts</strong> — Empate exato + pênaltis correto</div>
+        <div class="pts-item"><strong>6 pts</strong> — Empate exato + pênaltis errado</div>
+        <div class="pts-item"><strong>6 pts</strong> — Empate sem exato + pênaltis correto</div>
+        <div class="pts-item"><strong>3 pts</strong> — Empate sem exato + pênaltis errado</div>
+        <div class="pts-item"><strong>15 pts</strong> — Acertar o Campeão</div>
+        <div class="pts-item"><strong>5 pts</strong> — Acertar o Vice</div>
+        <div class="pts-item" style="border-left-color:#e74c3c;"><strong style="color:#e74c3c;">7 pts</strong> — Acertar o Artilheiro</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="counter-bar">
+    <span>Jogos preenchidos: <strong id="preenchidos">0</strong> / 104</span>
+    <span>Grupos: 72 &nbsp;|&nbsp; Mata-mata: 32</span>
+  </div>
+
+  <div class="fase-section" id="formJogos">
+
+    <div class="fase-header">⚽ FASE DE GRUPOS <span class="tag-fase">72 jogos • 11 Jun – 27 Jun</span></div>
+
+    <div class="grupo-section">
+      <div class="grupo-title">Grupo A — México · África do Sul · Coreia do Sul · Rep. Tcheca</div>
+      <div class="jogo-card" data-id="1"><div class="jogo-info"><div class="jogo-data">Qui 11/06 • 16h</div><div class="jogo-times">🇲🇽 México vs África do Sul 🇿🇦</div><div class="jogo-local">📍 Cidade do México</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="2"><div class="jogo-info"><div class="jogo-data">Qui 11/06 • 23h</div><div class="jogo-times">🇰🇷 Coreia do Sul vs Rep. Tcheca 🇨🇿</div><div class="jogo-local">📍 Guadalajara</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="3"><div class="jogo-info"><div class="jogo-data">Qui 18/06 • 13h</div><div class="jogo-times">🇨🇿 Rep. Tcheca vs África do Sul 🇿🇦</div><div class="jogo-local">📍 Atlanta</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="4"><div class="jogo-info"><div class="jogo-data">Qui 18/06 • 22h</div><div class="jogo-times">🇲🇽 México vs Coreia do Sul 🇰🇷</div><div class="jogo-local">📍 Guadalajara</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="5"><div class="jogo-info"><div class="jogo-data">Qua 24/06 • 22h</div><div class="jogo-times">🇨🇿 Rep. Tcheca vs México 🇲🇽</div><div class="jogo-local">📍 Cidade do México</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="6"><div class="jogo-info"><div class="jogo-data">Qua 24/06 • 22h</div><div class="jogo-times">🇿🇦 África do Sul vs Coreia do Sul 🇰🇷</div><div class="jogo-local">📍 Monterrey</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+    </div>
+
+    <div class="grupo-section">
+      <div class="grupo-title">Grupo B — Canadá · Bósnia-Herzegovina · Catar · Suíça</div>
+      <div class="jogo-card" data-id="7"><div class="jogo-info"><div class="jogo-data">Sex 12/06 • 16h</div><div class="jogo-times">🇨🇦 Canadá vs Bósnia-Herzegovina 🇧🇦</div><div class="jogo-local">📍 Toronto</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="8"><div class="jogo-info"><div class="jogo-data">Sáb 13/06 • 16h</div><div class="jogo-times">🇶🇦 Catar vs Suíça 🇨🇭</div><div class="jogo-local">📍 San Francisco</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="9"><div class="jogo-info"><div class="jogo-data">Qui 18/06 • 16h</div><div class="jogo-times">🇨🇭 Suíça vs Bósnia-Herzegovina 🇧🇦</div><div class="jogo-local">📍 Los Angeles</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="10"><div class="jogo-info"><div class="jogo-data">Qui 18/06 • 19h</div><div class="jogo-times">🇨🇦 Canadá vs Catar 🇶🇦</div><div class="jogo-local">📍 Vancouver</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="11"><div class="jogo-info"><div class="jogo-data">Qua 24/06 • 16h</div><div class="jogo-times">🇨🇭 Suíça vs Canadá 🇨🇦</div><div class="jogo-local">📍 Vancouver</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="12"><div class="jogo-info"><div class="jogo-data">Qua 24/06 • 16h</div><div class="jogo-times">🇧🇦 Bósnia-Herzegovina vs Catar 🇶🇦</div><div class="jogo-local">📍 Seattle</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+    </div>
+
+    <div class="grupo-section">
+      <div class="grupo-title">Grupo C — Brasil · Marrocos · Escócia · Haiti</div>
+      <div class="jogo-card" data-id="13"><div class="jogo-info"><div class="jogo-data">Sáb 13/06 • 19h</div><div class="jogo-times">🇧🇷 Brasil vs Marrocos 🇲🇦</div><div class="jogo-local">📍 Nova York</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="14"><div class="jogo-info"><div class="jogo-data">Sáb 13/06 • 22h</div><div class="jogo-times">🇭🇹 Haiti vs Escócia 🏴󠁧󠁢󠁳󠁣󠁴󠁿</div><div class="jogo-local">📍 Boston</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="15"><div class="jogo-info"><div class="jogo-data">Sex 19/06 • 19h</div><div class="jogo-times">🏴󠁧󠁢󠁳󠁣󠁴󠁿 Escócia vs Marrocos 🇲🇦</div><div class="jogo-local">📍 Boston</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="16"><div class="jogo-info"><div class="jogo-data">Sex 19/06 • 21h30</div><div class="jogo-times">🇧🇷 Brasil vs Haiti 🇭🇹</div><div class="jogo-local">📍 Filadélfia</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="17"><div class="jogo-info"><div class="jogo-data">Qua 24/06 • 19h</div><div class="jogo-times">🏴󠁧󠁢󠁳󠁣󠁴󠁿 Escócia vs Brasil 🇧🇷</div><div class="jogo-local">📍 Miami</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="18"><div class="jogo-info"><div class="jogo-data">Qua 24/06 • 19h</div><div class="jogo-times">🇲🇦 Marrocos vs Haiti 🇭🇹</div><div class="jogo-local">📍 Atlanta</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+    </div>
+
+    <div class="grupo-section">
+      <div class="grupo-title">Grupo D — Estados Unidos · Paraguai · Austrália · Turquia</div>
+      <div class="jogo-card" data-id="19"><div class="jogo-info"><div class="jogo-data">Sex 12/06 • 22h</div><div class="jogo-times">🇺🇸 Estados Unidos vs Paraguai 🇵🇾</div><div class="jogo-local">📍 Los Angeles</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="20"><div class="jogo-info"><div class="jogo-data">Sáb 13/06 • 01h</div><div class="jogo-times">🇦🇺 Austrália vs Turquia 🇹🇷</div><div class="jogo-local">📍 Vancouver</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="21"><div class="jogo-info"><div class="jogo-data">Sex 19/06 • 01h</div><div class="jogo-times">🇹🇷 Turquia vs Paraguai 🇵🇾</div><div class="jogo-local">📍 San Francisco</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="22"><div class="jogo-info"><div class="jogo-data">Sex 19/06 • 16h</div><div class="jogo-times">🇺🇸 Estados Unidos vs Austrália 🇦🇺</div><div class="jogo-local">📍 Seattle</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="23"><div class="jogo-info"><div class="jogo-data">Qui 25/06 • 23h</div><div class="jogo-times">🇹🇷 Turquia vs Estados Unidos 🇺🇸</div><div class="jogo-local">📍 Los Angeles</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="24"><div class="jogo-info"><div class="jogo-data">Qui 25/06 • 23h</div><div class="jogo-times">🇵🇾 Paraguai vs Austrália 🇦🇺</div><div class="jogo-local">📍 San Francisco</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+    </div>
+
+    <div class="grupo-section">
+      <div class="grupo-title">Grupo E — Alemanha · Equador · Costa do Marfim · Curaçao</div>
+      <div class="jogo-card" data-id="25"><div class="jogo-info"><div class="jogo-data">Dom 14/06 • 14h</div><div class="jogo-times">🇩🇪 Alemanha vs Curaçao 🇨🇼</div><div class="jogo-local">📍 Houston</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="26"><div class="jogo-info"><div class="jogo-data">Dom 14/06 • 20h</div><div class="jogo-times">🇨🇮 Costa do Marfim vs Equador 🇪🇨</div><div class="jogo-local">📍 Filadélfia</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="27"><div class="jogo-info"><div class="jogo-data">Sáb 20/06 • 17h</div><div class="jogo-times">🇩🇪 Alemanha vs Costa do Marfim 🇨🇮</div><div class="jogo-local">📍 Toronto</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="28"><div class="jogo-info"><div class="jogo-data">Sáb 20/06 • 21h</div><div class="jogo-times">🇪🇨 Equador vs Curaçao 🇨🇼</div><div class="jogo-local">📍 Kansas City</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="29"><div class="jogo-info"><div class="jogo-data">Qui 25/06 • 17h</div><div class="jogo-times">🇪🇨 Equador vs Alemanha 🇩🇪</div><div class="jogo-local">📍 Nova York</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="30"><div class="jogo-info"><div class="jogo-data">Qui 25/06 • 17h</div><div class="jogo-times">🇨🇼 Curaçao vs Costa do Marfim 🇨🇮</div><div class="jogo-local">📍 Filadélfia</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+    </div>
+
+    <div class="grupo-section">
+      <div class="grupo-title">Grupo F — Holanda · Japão · Suécia · Tunísia</div>
+      <div class="jogo-card" data-id="31"><div class="jogo-info"><div class="jogo-data">Dom 14/06 • 17h</div><div class="jogo-times">🇳🇱 Holanda vs Japão 🇯🇵</div><div class="jogo-local">📍 Dallas</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="32"><div class="jogo-info"><div class="jogo-data">Dom 14/06 • 23h</div><div class="jogo-times">🇸🇪 Suécia vs Tunísia 🇹🇳</div><div class="jogo-local">📍 Monterrey</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="33"><div class="jogo-info"><div class="jogo-data">Sáb 20/06 • 14h</div><div class="jogo-times">🇳🇱 Holanda vs Suécia 🇸🇪</div><div class="jogo-local">📍 Houston</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="34"><div class="jogo-info"><div class="jogo-data">Sáb 20/06 • 01h</div><div class="jogo-times">🇹🇳 Tunísia vs Japão 🇯🇵</div><div class="jogo-local">📍 Monterrey</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="35"><div class="jogo-info"><div class="jogo-data">Qui 25/06 • 20h</div><div class="jogo-times">🇹🇳 Tunísia vs Holanda 🇳🇱</div><div class="jogo-local">📍 Kansas City</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="36"><div class="jogo-info"><div class="jogo-data">Qui 25/06 • 20h</div><div class="jogo-times">🇯🇵 Japão vs Suécia 🇸🇪</div><div class="jogo-local">📍 Dallas</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+    </div>
+
+    <div class="grupo-section">
+      <div class="grupo-title">Grupo G — Bélgica · Irã · Egito · Nova Zelândia</div>
+      <div class="jogo-card" data-id="37"><div class="jogo-info"><div class="jogo-data">Seg 15/06 • 16h</div><div class="jogo-times">🇧🇪 Bélgica vs Egito 🇪🇬</div><div class="jogo-local">📍 Seattle</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="38"><div class="jogo-info"><div class="jogo-data">Seg 15/06 • 22h</div><div class="jogo-times">🇮🇷 Irã vs Nova Zelândia 🇳🇿</div><div class="jogo-local">📍 Los Angeles</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="39"><div class="jogo-info"><div class="jogo-data">Dom 21/06 • 16h</div><div class="jogo-times">🇧🇪 Bélgica vs Irã 🇮🇷</div><div class="jogo-local">📍 Los Angeles</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="40"><div class="jogo-info"><div class="jogo-data">Dom 21/06 • 22h</div><div class="jogo-times">🇳🇿 Nova Zelândia vs Egito 🇪🇬</div><div class="jogo-local">📍 Vancouver</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="41"><div class="jogo-info"><div class="jogo-data">Sáb 27/06 • 00h</div><div class="jogo-times">🇪🇬 Egito vs Irã 🇮🇷</div><div class="jogo-local">📍 Seattle</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="42"><div class="jogo-info"><div class="jogo-data">Sáb 27/06 • 00h</div><div class="jogo-times">🇳🇿 Nova Zelândia vs Bélgica 🇧🇪</div><div class="jogo-local">📍 Vancouver</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+    </div>
+
+    <div class="grupo-section">
+      <div class="grupo-title">Grupo H — Espanha · Uruguai · Arábia Saudita · Cabo Verde</div>
+      <div class="jogo-card" data-id="43"><div class="jogo-info"><div class="jogo-data">Seg 15/06 • 13h</div><div class="jogo-times">🇪🇸 Espanha vs Cabo Verde 🇨🇻</div><div class="jogo-local">📍 Atlanta</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="44"><div class="jogo-info"><div class="jogo-data">Seg 15/06 • 19h</div><div class="jogo-times">🇸🇦 Arábia Saudita vs Uruguai 🇺🇾</div><div class="jogo-local">📍 Miami</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="45"><div class="jogo-info"><div class="jogo-data">Dom 21/06 • 13h</div><div class="jogo-times">🇪🇸 Espanha vs Arábia Saudita 🇸🇦</div><div class="jogo-local">📍 Atlanta</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="46"><div class="jogo-info"><div class="jogo-data">Dom 21/06 • 19h</div><div class="jogo-times">🇺🇾 Uruguai vs Cabo Verde 🇨🇻</div><div class="jogo-local">📍 Miami</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="47"><div class="jogo-info"><div class="jogo-data">Sex 26/06 • 21h</div><div class="jogo-times">🇺🇾 Uruguai vs Espanha 🇪🇸</div><div class="jogo-local">📍 Guadalajara</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="48"><div class="jogo-info"><div class="jogo-data">Sex 26/06 • 21h</div><div class="jogo-times">🇨🇻 Cabo Verde vs Arábia Saudita 🇸🇦</div><div class="jogo-local">📍 Houston</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+    </div>
+
+    <div class="grupo-section">
+      <div class="grupo-title">Grupo I — França · Senegal · Iraque · Noruega</div>
+      <div class="jogo-card" data-id="49"><div class="jogo-info"><div class="jogo-data">Ter 16/06 • 16h</div><div class="jogo-times">🇫🇷 França vs Senegal 🇸🇳</div><div class="jogo-local">📍 Nova York</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="50"><div class="jogo-info"><div class="jogo-data">Ter 16/06 • 19h</div><div class="jogo-times">🇮🇶 Iraque vs Noruega 🇳🇴</div><div class="jogo-local">📍 Boston</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="51"><div class="jogo-info"><div class="jogo-data">Seg 22/06 • 18h</div><div class="jogo-times">🇫🇷 França vs Iraque 🇮🇶</div><div class="jogo-local">📍 Filadélfia</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="52"><div class="jogo-info"><div class="jogo-data">Seg 22/06 • 21h</div><div class="jogo-times">🇳🇴 Noruega vs Senegal 🇸🇳</div><div class="jogo-local">📍 Nova York</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="53"><div class="jogo-info"><div class="jogo-data">Sex 26/06 • 16h</div><div class="jogo-times">🇳🇴 Noruega vs França 🇫🇷</div><div class="jogo-local">📍 Boston</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="54"><div class="jogo-info"><div class="jogo-data">Sex 26/06 • 16h</div><div class="jogo-times">🇸🇳 Senegal vs Iraque 🇮🇶</div><div class="jogo-local">📍 Toronto</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+    </div>
+
+    <div class="grupo-section">
+      <div class="grupo-title">Grupo J — Argentina · Argélia · Áustria · Jordânia</div>
+      <div class="jogo-card" data-id="55"><div class="jogo-info"><div class="jogo-data">Ter 16/06 • 22h</div><div class="jogo-times">🇦🇷 Argentina vs Argélia 🇩🇿</div><div class="jogo-local">📍 Kansas City</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="56"><div class="jogo-info"><div class="jogo-data">Ter 16/06 • 01h</div><div class="jogo-times">🇦🇹 Áustria vs Jordânia 🇯🇴</div><div class="jogo-local">📍 San Francisco</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="57"><div class="jogo-info"><div class="jogo-data">Seg 22/06 • 14h</div><div class="jogo-times">🇦🇷 Argentina vs Áustria 🇦🇹</div><div class="jogo-local">📍 Dallas</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="58"><div class="jogo-info"><div class="jogo-data">Seg 22/06 • 00h</div><div class="jogo-times">🇯🇴 Jordânia vs Argélia 🇩🇿</div><div class="jogo-local">📍 San Francisco</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="59"><div class="jogo-info"><div class="jogo-data">Sáb 27/06 • 23h</div><div class="jogo-times">🇯🇴 Jordânia vs Argentina 🇦🇷</div><div class="jogo-local">📍 Dallas</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="60"><div class="jogo-info"><div class="jogo-data">Sáb 27/06 • 23h</div><div class="jogo-times">🇩🇿 Argélia vs Áustria 🇦🇹</div><div class="jogo-local">📍 Kansas City</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+    </div>
+
+    <div class="grupo-section">
+      <div class="grupo-title">Grupo K — Portugal · Colômbia · Uzbequistão · RD Congo</div>
+      <div class="jogo-card" data-id="61"><div class="jogo-info"><div class="jogo-data">Qua 17/06 • 14h</div><div class="jogo-times">🇵🇹 Portugal vs RD Congo 🇨🇩</div><div class="jogo-local">📍 Houston</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="62"><div class="jogo-info"><div class="jogo-data">Qua 17/06 • 23h</div><div class="jogo-times">🇺🇿 Uzbequistão vs Colômbia 🇨🇴</div><div class="jogo-local">📍 Cidade do México</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="63"><div class="jogo-info"><div class="jogo-data">Ter 23/06 • 14h</div><div class="jogo-times">🇵🇹 Portugal vs Uzbequistão 🇺🇿</div><div class="jogo-local">📍 Houston</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="64"><div class="jogo-info"><div class="jogo-data">Ter 23/06 • 23h</div><div class="jogo-times">🇨🇴 Colômbia vs RD Congo 🇨🇩</div><div class="jogo-local">📍 Guadalajara</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="65"><div class="jogo-info"><div class="jogo-data">Sáb 27/06 • 20h30</div><div class="jogo-times">🇨🇴 Colômbia vs Portugal 🇵🇹</div><div class="jogo-local">📍 Miami</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="66"><div class="jogo-info"><div class="jogo-data">Sáb 27/06 • 20h30</div><div class="jogo-times">🇨🇩 RD Congo vs Uzbequistão 🇺🇿</div><div class="jogo-local">📍 Atlanta</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+    </div>
+
+    <div class="grupo-section">
+      <div class="grupo-title">Grupo L — Inglaterra · Croácia · Gana · Panamá</div>
+      <div class="jogo-card" data-id="67"><div class="jogo-info"><div class="jogo-data">Qua 17/06 • 17h</div><div class="jogo-times">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Inglaterra vs Croácia 🇭🇷</div><div class="jogo-local">📍 Dallas</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="68"><div class="jogo-info"><div class="jogo-data">Qua 17/06 • 20h</div><div class="jogo-times">🇬🇭 Gana vs Panamá 🇵🇦</div><div class="jogo-local">📍 Toronto</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="69"><div class="jogo-info"><div class="jogo-data">Ter 23/06 • 17h</div><div class="jogo-times">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Inglaterra vs Gana 🇬🇭</div><div class="jogo-local">📍 Boston</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="70"><div class="jogo-info"><div class="jogo-data">Ter 23/06 • 20h</div><div class="jogo-times">🇵🇦 Panamá vs Croácia 🇭🇷</div><div class="jogo-local">📍 Toronto</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="71"><div class="jogo-info"><div class="jogo-data">Sáb 27/06 • 18h</div><div class="jogo-times">🇵🇦 Panamá vs Inglaterra 🏴󠁧󠁢󠁥󠁮󠁧󠁿</div><div class="jogo-local">📍 Nova York</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+      <div class="jogo-card" data-id="72"><div class="jogo-info"><div class="jogo-data">Sáb 27/06 • 18h</div><div class="jogo-times">🇭🇷 Croácia vs Gana 🇬🇭</div><div class="jogo-local">📍 Filadélfia</div></div><div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div></div>
+    </div>
+
+    <div class="fase-header mata">🔥 RODADA DE 32 <span class="tag-fase">16 jogos • 28 Jun – 3 Jul</span></div>
+    <div class="grupo-section">
+      <div class="grupo-title">Confrontos definidos após fase de grupos</div>
+      <div id="r32-jogos"></div>
+    </div>
+
+    <div class="fase-header mata">⚔️ OITAVAS DE FINAL <span class="tag-fase">8 jogos • 4–7 Jul</span></div>
+    <div class="grupo-section"><div id="oitavas-jogos"></div></div>
+
+    <div class="fase-header semi">🏅 QUARTAS DE FINAL <span class="tag-fase">4 jogos • 9–11 Jul</span></div>
+    <div class="grupo-section"><div id="quartas-jogos"></div></div>
+
+    <div class="fase-header semi">🌟 SEMIFINAIS <span class="tag-fase">2 jogos • 14–15 Jul</span></div>
+    <div class="grupo-section"><div id="semi-jogos"></div></div>
+
+    <div class="fase-header final">🥉 DISPUTA DE 3º LUGAR <span class="tag-fase">18 Jul • Miami</span></div>
+    <div class="grupo-section">
+      <div class="jogo-card" data-id="103">
+        <div class="jogo-info"><div class="jogo-data">Sáb 18/07 • 18h</div><div class="jogo-times">🥉 Disputa 3º Lugar — A definir vs A definir</div><div class="jogo-local">📍 Miami</div></div>
+        <div style="width:100%">
+          <div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div>
+          <div class="pen-toggle" style="margin-top:6px"><input type="checkbox" onchange="togglePen(this,103)"> Houve pênaltis?</div>
+          <div class="pen-select" id="pen-103"><select><option value="">— Quem avançou? —</option><option value="time1">Time 1</option><option value="time2">Time 2</option></select></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="fase-header final" style="background:linear-gradient(90deg,#b8860b,#ffd700,#b8860b);color:#3a2500;">🏆 GRANDE FINAL <span class="tag-fase" style="background:rgba(0,0,0,0.15);color:#3a2500;">19 Jul • Nova York</span></div>
+    <div class="grupo-section">
+      <div class="jogo-card" data-id="104" style="border:2px solid #ffd700;background:#fffde7;">
+        <div class="jogo-info"><div class="jogo-data" style="color:#b8860b;font-weight:700;">Dom 19/07 • 16h — MetLife Stadium</div><div class="jogo-times" style="font-size:1.05rem;">🏆 FINAL — A definir vs A definir</div><div class="jogo-local" style="color:#b8860b;">📍 Nova York / Nova Jersey</div></div>
+        <div style="width:100%">
+          <div class="placar-input"><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"><span class="placar-sep">×</span><input type="number" min="0" max="99" placeholder="0" oninput="updateCount()"></div>
+          <div class="pen-toggle" style="margin-top:6px"><input type="checkbox" onchange="togglePen(this,104)"> Houve pênaltis?</div>
+          <div class="pen-select" id="pen-104"><select><option value="">— Quem avançou? —</option><option value="time1">Time 1</option><option value="time2">Time 2</option></select></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="background:white;">
+    <button class="btn-submit" id="btnEnviar" onclick="enviarBolao()">✅ CONFIRMAR MEUS PALPITES</button>
+  </div>
+
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <span class="modal-close" onclick="fecharModal()">✕</span>
+    <h2>🎉 Palpites Enviados!</h2>
+    <p id="modalNome"></p>
+    <div class="summary-list" id="summaryList"></div>
+    <button class="modal-btn" onclick="fecharModal()">Fechar</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ⚙️ COLE SUA URL AQUI
+  const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyw5ZJqtJ_4FzhBqYrzapU79oCPuSCBP9wyTIlRIypB2TZm5Q7ZkECXHMBMJ4xUnh235A/exec";
+
+  // Gera jogos do mata-mata dinamicamente
+  function gerarJogosMata(containerId, jogos) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = jogos.map(j => `
+      <div class="jogo-card" data-id="${j.id}">
+        <div class="jogo-info">
+          <div class="jogo-data">${j.data}</div>
+          <div class="jogo-times">Jogo ${j.id} — A definir vs A definir</div>
+          <div class="jogo-local">📍 ${j.local}</div>
+        </div>
+        <div style="width:100%">
+          <div class="placar-input">
+            <input type="number" min="0" max="99" placeholder="0" oninput="updateCount()">
+            <span class="placar-sep">×</span>
+            <input type="number" min="0" max="99" placeholder="0" oninput="updateCount()">
+          </div>
+          <div class="pen-toggle" style="margin-top:6px">
+            <input type="checkbox" onchange="togglePen(this,${j.id})"> Houve pênaltis?
+          </div>
+          <div class="pen-select" id="pen-${j.id}">
+            <select><option value="">— Quem avançou? —</option><option value="time1">Time 1 (esquerda)</option><option value="time2">Time 2 (direita)</option></select>
+          </div>
+        </div>
+      </div>`).join('');
+  }
+
+  const r32 = [
+    {id:73,data:'Dom 28/06 • 16h',local:'Los Angeles'},{id:74,data:'Seg 29/06 • 17h30',local:'Boston'},
+    {id:75,data:'Seg 29/06 • 22h',local:'Monterrey'},{id:76,data:'Seg 29/06 • 14h',local:'Houston'},
+    {id:77,data:'Ter 30/06 • 18h',local:'Nova York'},{id:78,data:'Ter 30/06 • 14h',local:'Dallas'},
+    {id:79,data:'Ter 30/06 • 22h',local:'Cidade do México'},{id:80,data:'Qua 01/07 • 13h',local:'Atlanta'},
+    {id:81,data:'Qua 01/07 • 21h',local:'San Francisco'},{id:82,data:'Qua 01/07 • 17h',local:'Seattle'},
+    {id:83,data:'Qui 02/07 • 20h',local:'Toronto'},{id:84,data:'Qui 02/07 • 16h',local:'Los Angeles'},
+    {id:85,data:'Qui 02/07 • 00h',local:'Vancouver'},{id:86,data:'Sex 03/07 • 19h',local:'Miami'},
+    {id:87,data:'Sex 03/07 • 22h30',local:'Kansas City'},{id:88,data:'Sex 03/07 • 15h',local:'Dallas'}
+  ];
+  const oitavas = [
+    {id:89,data:'Sáb 04/07 • 18h',local:'Filadélfia'},{id:90,data:'Sáb 04/07 • 14h',local:'Houston'},
+    {id:91,data:'Dom 05/07 • 17h',local:'Nova York'},{id:92,data:'Dom 05/07 • 21h',local:'Cidade do México'},
+    {id:93,data:'Seg 06/07 • 16h',local:'Dallas'},{id:94,data:'Seg 06/07 • 21h',local:'Seattle'},
+    {id:95,data:'Ter 07/07 • 13h',local:'Atlanta'},{id:96,data:'Ter 07/07 • 17h',local:'Vancouver'}
+  ];
+  const quartas = [
+    {id:97,data:'Qui 09/07 • 17h',local:'Boston'},{id:98,data:'Sex 10/07 • 16h',local:'Los Angeles'},
+    {id:99,data:'Sáb 11/07 • 18h',local:'Miami'},{id:100,data:'Sáb 11/07 • 22h',local:'Kansas City'}
+  ];
+  const semis = [
+    {id:101,data:'Ter 14/07 • 16h',local:'Dallas'},{id:102,data:'Qua 15/07 • 16h',local:'Atlanta'}
+  ];
+
+  gerarJogosMata('r32-jogos', r32);
+  gerarJogosMata('oitavas-jogos', oitavas);
+  gerarJogosMata('quartas-jogos', quartas);
+  gerarJogosMata('semi-jogos', semis);
+
+  function togglePontuacao() {
+    const c = document.getElementById('pontuacaoContent');
+    const a = document.getElementById('arrow');
+    c.classList.toggle('open');
+    a.textContent = c.classList.contains('open') ? '▲' : '▼';
+  }
+
+  function togglePen(cb, id) {
+    const el = document.getElementById('pen-' + id);
+    if (el) el.classList.toggle('show', cb.checked);
+  }
+
+  function updateCount() {
+    let count = 0;
+    document.querySelectorAll('.jogo-card').forEach(card => {
+      const inputs = card.querySelectorAll('input[type="number"]');
+      if (inputs.length >= 2 && inputs[0].value !== '' && inputs[1].value !== '') count++;
+    });
+    document.getElementById('preenchidos').textContent = count;
+  }
+
+  function showToast(msg, tipo = '') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show ' + tipo;
+    setTimeout(() => { t.className = 'toast'; }, 3500);
+  }
+
+  async function enviarBolao() {
+    const nome = document.getElementById('nome').value.trim();
+    if (!nome) { showToast('⚠️ Informe seu nome antes de confirmar!', 'error'); return; }
+    if (APPS_SCRIPT_URL === "COLE_SUA_URL_AQUI") { showToast('⚠️ URL do Apps Script não configurada!', 'error'); return; }
+
+    const jogos = {};
+    const resumo = [];
+    let totalPreenchidos = 0;
+
+    document.querySelectorAll('.jogo-card').forEach(card => {
+      const id = parseInt(card.getAttribute('data-id'));
+      const inputs = card.querySelectorAll('input[type="number"]');
+      const times = card.querySelector('.jogo-times');
+      if (inputs.length >= 2) {
+        const casa = inputs[0].value !== '' ? parseInt(inputs[0].value) : '';
+        const fora = inputs[1].value !== '' ? parseInt(inputs[1].value) : '';
+        const penDiv = document.getElementById('pen-' + id);
+        let pen = '';
+        if (penDiv && penDiv.classList.contains('show')) {
+          const sel = penDiv.querySelector('select');
+          pen = sel ? sel.value : '';
+        }
+        jogos[id] = { casa, fora, pen };
+        if (casa !== '' && fora !== '') {
+          totalPreenchidos++;
+          resumo.push({ label: times ? times.textContent.trim() : `Jogo ${id}`, placar: `${casa} × ${fora}${pen ? ` (Pên: ${pen === 'time1' ? 'T1' : 'T2'})` : ''}` });
+        }
+      }
+    });
+
+    const payload = {
+      nome,
+      apelido: document.getElementById('apelido').value.trim(),
+      campeao: document.getElementById('campeao').value.trim(),
+      vice: document.getElementById('vice').value.trim(),
+      artilheiro: document.getElementById('artilheiro').value.trim(),
+      jogos
+    };
+
+    const btn = document.getElementById('btnEnviar');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Enviando...';
+
+    try {
+      const resp = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+      const json = await resp.json();
+      if (json.status === 'ok') {
+        document.getElementById('modalNome').innerHTML =
+          `<strong>${nome}</strong> | 🏆 ${payload.campeao||'—'} | 🥈 ${payload.vice||'—'} | ⚽ ${payload.artilheiro||'—'}<br>
+          <span style="font-size:0.82rem;color:#888;">Jogos preenchidos: ${totalPreenchidos}/104</span>`;
+        document.getElementById('summaryList').innerHTML = resumo.length
+          ? resumo.map(i => `<div class="s-item"><span>${i.label}</span><strong>${i.placar}</strong></div>`).join('')
+          : '<div style="color:#aaa;padding:8px;">Nenhum palpite preenchido.</div>';
+        document.getElementById('modalOverlay').classList.add('show');
+        showToast('✅ Palpites salvos com sucesso!', 'success');
+      } else { throw new Error(json.msg || 'Erro desconhecido'); }
+    } catch (err) {
+      showToast('❌ Erro ao enviar. Tente novamente.', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '✅ CONFIRMAR MEUS PALPITES';
+    }
+  }
+
+  function fecharModal() { document.getElementById('modalOverlay').classList.remove('show'); }
+  document.getElementById('modalOverlay').addEventListener('click', function(e) { if (e.target === this) fecharModal(); });
+</script>
+</body>
+</html>
